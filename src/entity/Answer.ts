@@ -1,14 +1,15 @@
 import { Column, Entity, JoinColumn, ManyToMany, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Questionary } from "./Questionary";
 import { User } from "./User";
+import { AnswersType } from "../../app";
 
 @Entity()
 export class Answer {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({default:"answer"})
-    answer: string;
+    @Column()
+    answer:string;
 
     // @ManyToOne(type => Questionary , quest => quest.answers, {
     //     nullable: false,

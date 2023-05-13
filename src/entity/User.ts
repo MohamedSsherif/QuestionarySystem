@@ -9,13 +9,16 @@ export class User {
     @PrimaryGeneratedColumn()
     id: number
 
+    @Column({unique:true})
+    email: string
+
     @Column({default: "user"})
     name: string
 
     @Column({default: "123456789"})
     password: string
 
-    @Column({default:"123"})
+    @Column({unique:true})
     university_code: string
 
     // @Column({unique:true})

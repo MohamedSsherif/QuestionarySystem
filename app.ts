@@ -8,6 +8,8 @@ import { Answer } from "./src/entity/Answer"
 import * as bcrypt from 'bcrypt'
 import { UserAnswer } from "./src/entity/UserAnswers"
 
+export enum AnswersType {OK = "موافق" , Not_OK = "غير موافق", MAYBE = "الي حد ما", EXACTLY= "موافق تماما"}
+
 
 const myDataSource = new DataSource({
     type: "mysql",
@@ -27,7 +29,7 @@ myDataSource
     .initialize()
     .then(() => {
         console.log("Data Source has been initialized!")
-        onAppBootstrap()
+      
     })
     .catch((err) => {
         console.error("Error during Data Source initialization:", err)
@@ -37,66 +39,38 @@ myDataSource
 const app = express()
 app.use(express.json())
 
-async function onAppBootstrap() {
-    const user1 = new User()
-    
-    // user.email = "sa@asd.com"
-    const ds = myDataSource.getRepository(User)
-    if(!ds.findOneBy({id:1})){
-        const userRepo = ds.create([user1])
-        await ds.save(userRepo)
-    }
 
-    const question1 = new Questionary()
-    const ds1 = myDataSource.getRepository(Questionary)
-    if(!ds1.findOneBy({id:1})){
-        const userRepo = ds1.create([question1])
-        await ds1.save(userRepo)
-    }
-
-    const answer1 = new Answer()
-    const answerDs = myDataSource.getRepository(Answer)
-    if(!answerDs.findOneBy({id:1})){
-        const userRepo = ds1.create([answer1])
-        await ds1.save(userRepo)
-    }
-
-    const course = new Course()
-    course.users = [user1]
-    const courseDs = myDataSource.getRepository(Course)
-    if(!courseDs.findOneBy({id:1})){
-        const userRepo = ds1.create([course])
-        await ds1.save(userRepo)
-    }
-
-
-
-
-}
 
 
 app.post('/signIn',async (req,res)=>{
-    const query = await myDataSource.getRepository(User)
+    // email , password , university code and national id are required 
+   const query = await myDataSource.getRepository(User)
 
-    let user = await query.findOne( {relations: {courses:true} , where:{national_id: req.body.national_id }})
-    // let  userRes = await repo.findBy({NationalId: req.body.NationalId,})
-    if(!user || user === undefined){
-        return res.status(404).send('User not found')
-    }
+   let user = await query.findOne( {relations: {courses:true} , where:{national_id: req.body.national_id , university_code: req.body.university_code}})
+   // let  userRes = await repo.findBy({NationalId: req.body.NationalId,})
+   if(!user || user === undefined){
+       return res.status(404).send('User not found')
+   }
 
-    const checkpassword = await bcrypt.compare(req.body.password,user.password)
-    if(!checkpassword){
-        return res.status(404).send('invalid nationalId or password')
-    }
+   const email: String = user.email
+   if(email !== req.body.email, email.split('@')[1] !== "fcis.bsu.edu.eg"){
+       return res.status(404).send('invalid email')
+   }
 
-    //var request = new sql.Request();
-    // request.query('select password from users', function (err, records) {
-    //     if (err) console.log(err)
-    //     res.send(records);
-    // });
+   const checkpassword = await bcrypt.compare(req.body.password,user.password)
+   if(!checkpassword){
+       return res.status(404).send('invalid password')
+   }
 
-    delete user.password
-    res.json(user)
+
+   //var request = new sql.Request();
+   // request.query('select password from users', function (err, records) {
+   //     if (err) console.log(err)
+   //     res.send(records);
+   // });
+
+   delete user.password
+   res.json(user)
 })
 
 app.post("/user", async function (req: Request, res: Response) {
@@ -243,10 +217,10 @@ app.get("/questionAnswerCount", async function (req: Request, res: Response) {
 
     const totalLength = repo.length
 
-    const OK_Res = repo.filter((item) => item.answer.answer === "ok").length/totalLength
-    const Tmam_Res = repo.filter((item) => item.answer.answer === "tmam").length/totalLength
-    const yes_res = repo.filter((item) => item.answer.answer === "yes").length/totalLength
-    const no_res = repo.filter((item) => item.answer.answer === "No").length/totalLength
+    const OK_Res = repo.filter((item) => item.answer.answer === AnswersType.OK).length/totalLength
+    const Tmam_Res = repo.filter((item) => item.answer.answer === AnswersType.Not_OK).length/totalLength
+    const yes_res = repo.filter((item) => item.answer.answer === AnswersType.MAYBE).length/totalLength
+    const no_res = repo.filter((item) => item.answer.answer === AnswersType.EXACTLY).length/totalLength
 
     // const results = repo.length
     const results = {"ok" : OK_Res , "tmam" : Tmam_Res , "yes" : yes_res , "no" : no_res}
@@ -256,20 +230,43 @@ app.get("/questionAnswerCount", async function (req: Request, res: Response) {
 
 
 app.get("/percentage", async function (req: Request, res: Response) {
-    const userAnswerRepo = await myDataSource.getRepository(UserAnswer)
-    .createQueryBuilder("userAnswer")
-    .leftJoinAndSelect('Questionary', 'question', 'question.id = userAnswer.question.id')
-    .getMany()
+    // const userAnswerRepo = await myDataSource.getRepository(UserAnswer)
+    // .createQueryBuilder("userAnswer")
+    // .leftJoinAndSelect('Questionary', 'question', 'question.id = userAnswer.question.id')
+    // .loadAllRelationIds()
+    // .getMany()
 
-    const questionRepo = await myDataSource.getRepository(Questionary)
+    const questionRepo: any = await myDataSource.getRepository(Questionary)
     .createQueryBuilder("question")
     .leftJoinAndMapMany('question.answers', UserAnswer, 'ans', 'ans.question.id = question.id')
     .leftJoinAndSelect('ans.answer', 'ans2')
-    .getCount()
+    .getMany()
+
+    const statiscs = questionRepo.map((item: any) => {
+        
+        let ans = item.answers
+        let totalAns = ans.length
+
+        let ok = ans.filter((item: any) => item.answer.answer === AnswersType.OK).length
+        let notOk = ans.filter((item: any) => item.answer.answer === AnswersType.Not_OK).length
+        let maybe = ans.filter((item: any) => item.answer.answer === AnswersType.MAYBE).length
+        let Exactly = ans.filter((item: any) => item.answer.answer === AnswersType.EXACTLY).length
+
+        return {
+            question: item.question,
+            answers:{
+                "موافق": ok/totalAns,
+                "غير موافق": notOk/totalAns,
+                "الي حد ما": maybe/totalAns,
+                "موافق تماما": Exactly/totalAns,
+            } 
+        }
+    })
+
     
 
 
-    const totalQuestionAnswersLength = questionRepo
+    // const totalQuestionAnswersLength = questionRepo
 
 
 
@@ -303,8 +300,8 @@ app.get("/percentage", async function (req: Request, res: Response) {
     // userAnswer.course = data.course
     
 
-    const results = questionRepo
-    return res.json(results)
+    // const results = questionRepo
+    return res.json(statiscs)
 })
 
 app.get("/allUserAnswer", async function (req: Request, res: Response) {
@@ -337,3 +334,14 @@ app.delete("/users/:id", async function (req: Request, res: Response) {
 app.listen(3000)
 
 
+// export class Statiscs{
+
+//     question: Questionary
+//     percentage: [AnswerStatics]
+
+// }
+
+// export class AnswerStatics{
+//     answer: Answer
+//     percentage: number
+// }
