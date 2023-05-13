@@ -9,16 +9,17 @@ export class User {
     @PrimaryGeneratedColumn()
     id: number
 
-    @Column()
+    @Column({default: "user"})
     name: string
 
-    @Column()
+    @Column({default: "123456789"})
     password: string
 
-    @Column()
+    @Column({default:"123"})
     university_code: string
 
-    @Column({unique:true})
+    // @Column({unique:true})
+    @Column({default:"123"})
     national_id: string
 
     @Column({
@@ -35,6 +36,9 @@ export class User {
     @ManyToMany(() => Course,(course)=> course.users)
     // @JoinTable({ name: "user_courses" })
     courses: Course[];
+
+
+    userAnswers: any
 
 }
 
