@@ -6,6 +6,7 @@ import { Course } from "./src/entity/Course"
 import { Questionary } from "./src/entity/Questionary"
 import { QuestionaryAnswers } from "./src/entity/QuestionaryAnswers"
 import * as bcrypt from 'bcrypt'
+import { UsersAnswers } from "./src/entity/UsersAnswers"
 
 
 const myDataSource = new DataSource({
@@ -14,7 +15,7 @@ const myDataSource = new DataSource({
     username: "root",
     password: "Me123456Do",
     database: 'university',
-    entities: [User,Course,Questionary , QuestionaryAnswers],
+    entities: [User,Course,Questionary , QuestionaryAnswers,UsersAnswers],
     logging: true,
     // debug: true,
     // synchronize: true,
@@ -37,18 +38,25 @@ app.use(express.json())
 
 
 app.post('/signIn',async (req,res)=>{
+     // email , password , university code and national id are required 
     const query = await myDataSource.getRepository(User)
 
-    let user = await query.findOne( {relations: {courses:true} , where:{national_id: req.body.national_id }})
+    let user = await query.findOne( {relations: {courses:true} , where:{national_id: req.body.national_id , university_code: req.body.university_code}})
     // let  userRes = await repo.findBy({NationalId: req.body.NationalId,})
     if(!user || user === undefined){
         return res.status(404).send('User not found')
     }
 
+    const email: String = user.email
+    if(email !== req.body.email, email.split('@')[1] !== "fcis.bsu.edu.eg"){
+        return res.status(404).send('invalid email')
+    }
+
     const checkpassword = await bcrypt.compare(req.body.password,user.password)
     if(!checkpassword){
-        return res.status(404).send('invalid nationalId or password')
+        return res.status(404).send('invalid password')
     }
+
 
     //var request = new sql.Request();
     // request.query('select password from users', function (err, records) {
@@ -107,18 +115,22 @@ app.get("/getCourseStudents", async function (req: Request, res: Response) {
 
 
 
-app.post("/questionary", async function (req: Request, res: Response) {
-    const repo =  myDataSource.getRepository(Questionary)
-    const user =  repo.create(req.body)
-    const results = await repo.save(user)
-    return res.send(results)
-})
 
+
+//add answer of questionary
 app.post("/answer", async function (req: Request, res: Response) {
     const repo = await myDataSource.getRepository(QuestionaryAnswers)
     const answer = await repo.create(req.body)
     const results = await repo.save(answer)
     return res.send(results)
+})
+
+app.get("/answers", async function (req: Request, res: Response) {
+    const repo = await myDataSource.getRepository(QuestionaryAnswers)
+    .createQueryBuilder("questionaryAnswers")
+
+    const results = await repo.getMany()
+    return res.json(results)
 })
 
 app.post("/course", async function (req: Request, res: Response) {
@@ -135,7 +147,15 @@ app.post("/course", async function (req: Request, res: Response) {
     return res.send(results)
 })
 
-app.get("/questionAnswers", async function (req: Request, res: Response) {
+app.post("/questionUserAnswers", async function (req: Request, res: Response) {
+    const repo = await myDataSource.getRepository(UsersAnswers)
+    const answer = await repo.create(req.body)
+    const results = await repo.save(answer)
+    return res.send(results)
+})
+
+
+app.get("/userAnswers", async function (req: Request, res: Response) {
     const repo = myDataSource.getRepository(Questionary)
     .createQueryBuilder("questionary")
     .leftJoinAndSelect("questionary.answers", "answers")
@@ -146,6 +166,32 @@ app.get("/questionAnswers", async function (req: Request, res: Response) {
     
 
     const results = await repo.getOne()
+    return res.json(results)
+})
+
+
+
+app.post("/questionary", async function (req: Request, res: Response) {
+    const repo =  myDataSource.getRepository(Questionary)
+    const question =  repo.create(req.body as Questionary)
+
+    // get answers from id
+    const answers = await myDataSource.getRepository(QuestionaryAnswers).createQueryBuilder("questionaryAnswers")
+    .whereInIds(req.body.answers)
+    .getMany()
+
+    // append answers to question
+    question.answers = answers
+
+    const results = await repo.save(question)
+    return res.send(results)
+})
+
+
+app.get("/questionary", async function (req: Request, res: Response) {
+    const repo = myDataSource.getRepository(Questionary)
+    .createQueryBuilder("questionary")
+    const results = await repo.getMany()
     return res.json(results)
 })
 

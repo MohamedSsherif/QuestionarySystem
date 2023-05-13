@@ -3,30 +3,29 @@ import { Questionary } from "./Questionary";
 import { User } from "./User";
 
 @Entity()
-export class QuestionaryAnswers {
+export class UsersAnswers  {
     @PrimaryGeneratedColumn()
     id: number;
 
     @Column()
     answer: string;
 
-    // @Column()
-    // answered_by_id: number;
+    @Column()
+    answered_by_id: number;
+
+    @Column()
+    percentage: number;
 
     @ManyToOne(type => Questionary , quest => quest.answers, {
-        nullable: true,
+        nullable: false,
         
     })
-    // @JoinColumn()
+    @JoinColumn()
     questionary: Questionary;
     
-    // @OneToOne(type => User, {
-    //     nullable: false,
-    // })
-    // @JoinColumn()
-    // user: User;
-
-    
-
-    
+    @OneToOne(type => User, {
+        nullable: false,
+    })
+    @JoinColumn()
+    user: User;
 }

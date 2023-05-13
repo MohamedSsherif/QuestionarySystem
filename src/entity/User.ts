@@ -21,6 +21,9 @@ export class User {
     @Column({unique:true})
     national_id: string
 
+    @Column({unique:true})
+    email: string
+
     @Column({
         type: "enum",
         enum: UserType,

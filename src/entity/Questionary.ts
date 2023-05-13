@@ -11,6 +11,12 @@ export class Questionary {
     @Column()
     question: string;
 
+    // @Column()
+    // answer: string;
+
+    // @Column()
+    // answer_id: number;
+
     @OneToMany(type => QuestionaryAnswers, (question)=> question.questionary)
     answers: QuestionaryAnswers[];
 
