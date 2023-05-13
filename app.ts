@@ -227,7 +227,28 @@ app.get("/questionAnswerCount", async function (req: Request, res: Response) {
     return res.json(results)
 })
 
+app.get("/Answer", async function (req: Request, res: Response) {
+    const repo = await myDataSource.getRepository(Answer)
+    .createQueryBuilder("answer")
+    .getMany()
+    return res.json(repo)
+})
 
+app.get("/question", async function (req: Request, res: Response) {
+    const repo = await myDataSource.getRepository(Questionary)
+    .createQueryBuilder("question")
+
+    .getMany()
+    return res.json(repo)
+})
+
+app.get("/allCourses", async function (req: Request, res: Response) {
+    const repo = await myDataSource.getRepository(Course)
+    .createQueryBuilder("course")
+   // .leftJoinAndSelect("course.users", "user")
+    .getMany()
+    return res.json(repo)
+})
 
 app.get("/percentage", async function (req: Request, res: Response) {
     // const userAnswerRepo = await myDataSource.getRepository(UserAnswer)
