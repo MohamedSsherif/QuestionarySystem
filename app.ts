@@ -246,9 +246,10 @@ app.get("/questionAnswerCount", async function (req: Request, res: Response) {
     const OK_Res = repo.filter((item) => item.answer.answer === "ok").length/totalLength
     const Tmam_Res = repo.filter((item) => item.answer.answer === "tmam").length/totalLength
     const yes_res = repo.filter((item) => item.answer.answer === "yes").length/totalLength
+    const no_res = repo.filter((item) => item.answer.answer === "No").length/totalLength
 
     // const results = repo.length
-    const results = {"ok" : OK_Res , "tmam" : Tmam_Res , "yes" : yes_res}
+    const results = {"ok" : OK_Res , "tmam" : Tmam_Res , "yes" : yes_res , "no" : no_res}
     return res.json(results)
 })
 
