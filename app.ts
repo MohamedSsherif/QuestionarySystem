@@ -7,19 +7,40 @@ import { Questionary } from "./src/entity/Questionary"
 import { Answer } from "./src/entity/Answer"
 import * as bcrypt from 'bcrypt'
 import { UserAnswer } from "./src/entity/UserAnswers"
+import * as cors from "cors";
+
 
 export enum AnswersType {OK = "موافق" , Not_OK = "غير موافق", MAYBE = "الي حد ما", EXACTLY= "موافق تماما"}
 
 
 const myDataSource = new DataSource({
-    type: "mysql",
-    host: "localhost",
-    username: "root",
-    password: "Me123456Do",
-    database: 'university',
+     type: "mysql",
+   
+    // type: "mysql",
+    // host: "localhost",
+    // username: "root",
+    // password: "Me123456Do",
+    // database: 'university',
+
+    //database: 'university',
+
+
+    host: 'sql7.freemysqlhosting.net',
+    username: 'sql7619574',
+    password: "8sIY41QPYP",
+    database: 'sql7619574',
+    port : 3306,
+    //connectionLimit : 1000,
+    connectTimeout  : 20000,
+    // acquireTimeout  : 60 * 60 * 1000,
+    // timeout         : 60 * 60 * 1000,
+
     entities: [User,Course,Questionary , Answer , UserAnswer],
     logging: true,
-    // debug: true,
+    
+    debug: false,
+    
+   
     // synchronize: true,
     // dropSchema:true
 })
@@ -39,7 +60,11 @@ myDataSource
 const app = express()
 app.use(express.json())
 
-
+app.use(cors({
+  origin: "*",
+  allowedHeaders: ["Content-Type", "Authorization"],
+  methods: ['GET, POST, PUT, DELETE'],
+}));
 
 
 app.post('/signIn',async (req,res)=>{
@@ -85,9 +110,16 @@ app.post("/user", async function (req: Request, res: Response) {
 
 app.get("/user", async function (req: Request, res: Response) {
     const repo = await myDataSource.getRepository(User)
-    .findOne({relations:{courses:true} , where:{id:req.query.id}})
+    .findOne({relations:{courses:true} , where:{id:+req.query.id}})
     // const user = await repo.findOneBy({userID :req.query.id})
     return res.send(repo)
+})
+
+app.get("/getAllUser",async function (req: Request,res:Response){
+   const repo = await myDataSource.getRepository(User)
+   .createQueryBuilder("User")
+   .getMany()
+    return res.json(repo)
 })
 
 app.post("/addCouseUsers", async function (req: Request, res: Response) {
@@ -148,21 +180,12 @@ app.post("/course", async function (req: Request, res: Response) {
     return res.send(results)
 })
 
-// app.post("/userAnswer", async function (req: Request, res: Response) {
-//     const userAnswersrepo =  myDataSource.getRepository(UserAnswer)
-//     const userAnswer = userAnswersrepo.create(req.body as UserAnswer)
-        
-    
-//     const finalAns = await userAnswersrepo.save(userAnswer)
-//    // const userAnswerRes = await userAnswersrepo.findOne( {relations: {user:true , course:true , question:true , answer: true , } , where:{id: finalAns.id }})
-//     const userAnswerRes = await userAnswersrepo.findOne( {relations: { question:true , answer: true , } , where:{id: finalAns.id }})
-//     return res.json(userAnswerRes)
-// })
+
 
 app.post("/userAnswer", async function (req: Request, res: Response) {
     const repo = myDataSource.getRepository(UserAnswer)
    
-    const ress = await repo.query(`select * from university.user_answer as ans left join user as user on user.id = ans.userId left join answer as answers on answers.id = ans.answerId where userId = ${req.body.user} and questionId = ${req.body.question};`)
+    const ress = await repo.query(`select * from sql7619574S.user_answer as ans left join user as user on user.id = ans.userId left join answer as answers on answers.id = ans.answerId where userId = ${req.body.user} and questionId = ${req.body.question} and courseId =${req.body.course};`)
 
     
     
@@ -173,16 +196,6 @@ app.post("/userAnswer", async function (req: Request, res: Response) {
     const userAnswer = repo.create(req.body as UserAnswer)
 
 
-
-    // .leftJoinAndSelect("userAnswer.course", "course",)
-    // .select(["questionary.id","questionary.question","answers.answer","user.name" , "user.id"])
-    // .where("question.id = :id", { id: req.body.questionId })
-   
-    // userAnswer.question = data.question
-    // userAnswer.answer = data.answer
-    // userAnswer.user = data.user
-    // userAnswer.course = data.course
-    
 
     const results = await repo.save(userAnswer)
     return res.json(results)
@@ -199,21 +212,11 @@ app.get("/questionAnswerCount", async function (req: Request, res: Response) {
         question: {
             id: req.body.question
         },
-        // answer: {
-        //     id: req.body.answer
-        // }
+      
     })
-    // .where("question.id = :id", { id: req.body.question })
-    // .addSelect('COUNT(answer.id) FILTER (WHERE answer.answer = 'tmam')', 'tmam_answer')
+    
     .getMany()
-    // .leftJoinAndSelect("userAnswer.answer", "answer",)
-    // .andWhere("question.answer.id = :id", { id: this.answe.id })
-
-    // const answers = await repo
-    // .leftJoinAndSelect("userAnswer.answer", "answer",)
-    // .where("answer.id = :id", {id:"question.id" })
-    // .getMany()
-    // .find( {relations: { answer: true}, where:{question: req.body.question}})
+    
 
     const totalLength = repo.length
 
@@ -250,80 +253,52 @@ app.get("/allCourses", async function (req: Request, res: Response) {
     return res.json(repo)
 })
 
+
 app.get("/percentage", async function (req: Request, res: Response) {
-    // const userAnswerRepo = await myDataSource.getRepository(UserAnswer)
-    // .createQueryBuilder("userAnswer")
-    // .leftJoinAndSelect('Questionary', 'question', 'question.id = userAnswer.question.id')
-    // .loadAllRelationIds()
-    // .getMany()
-
-    const questionRepo: any = await myDataSource.getRepository(Questionary)
-    .createQueryBuilder("question")
-    .leftJoinAndMapMany('question.answers', UserAnswer, 'ans', 'ans.question.id = question.id')
-    .leftJoinAndSelect('ans.answer', 'ans2')
-    .getMany()
-
-    const statiscs = questionRepo.map((item: any) => {
-        
-        let ans = item.answers
-        let totalAns = ans.length
-
-        let ok = ans.filter((item: any) => item.answer.answer === AnswersType.OK).length
-        let notOk = ans.filter((item: any) => item.answer.answer === AnswersType.Not_OK).length
-        let maybe = ans.filter((item: any) => item.answer.answer === AnswersType.MAYBE).length
-        let Exactly = ans.filter((item: any) => item.answer.answer === AnswersType.EXACTLY).length
-
-        return {
-            question: item.question,
-            answers:{
-                "موافق": ok/totalAns,
-                "غير موافق": notOk/totalAns,
-                "الي حد ما": maybe/totalAns,
-                "موافق تماما": Exactly/totalAns,
-            } 
-        }
-    })
-
+   
+  const questionRepo: any = await myDataSource.getRepository(Questionary)
+  .createQueryBuilder("question")
+  .leftJoinAndMapMany('question.answer', UserAnswer, 'ans', 'ans.question.id = question.id')
+  
+  .leftJoinAndSelect('ans.answer', 'ans2')
+  
+  .where("ans.courseId = :id", { id: req.query.courseId })
+  .getMany()
+  
+      const statiscs = questionRepo.map((item: any) => {
+          
+          let ans = item.answer
+          let totalAns = ans.length
+  
+          let ok = 0
+          let notOk = 0
+          let maybe = 0
+          let Exactly = 0
+  
+           ans.filter((item: any) => {
+              if(item.answer.answer === AnswersType.OK){
+                  ++ok
+              }else if(item.answer.answer === AnswersType.Not_OK){
+                  ++notOk
+              }else if(item.answer.answer === AnswersType.MAYBE){
+                  ++maybe
+              }else if(item.answer.answer === AnswersType.EXACTLY){
+                  ++Exactly
+              }
+           })
+          return {
+              question: item.question,
+              answers:{
+                  "موافق": (ok/totalAns)*100,
+                  "غير موافق": (notOk/totalAns)*100,
+                  "الي حد ما": (maybe/totalAns)*100,
+                  "موافق تماما": (Exactly/totalAns)*100,
+              } 
+          }
+      })
     
-
-
-    // const totalQuestionAnswersLength = questionRepo
-
-
-
-    // .leftJoinAndMapMany('post.follow', Follow, 'follow', 'follow.userId = user.id')
-    // .where(new Brackets(qb => {
-    //       qb.where('ans.publicScope = :follower', { follower: 'Follower' })
-    //         .andWhere('post.userId = follow.followeeId')
-    //         .andWhere(':myId = follow.userId', { myId: user.id })
-    // }))
-    // .getMany()
-    
-    // .createQueryBuilder("question")
-    // .leftJoinAndSelect("userAnswer.question", "question")
-    // .getMany()
-    // .findAndCount( {relations: {user:true , course:true , answer: true}, where:{question: req.body.question }})
-    // .count( { where:{question: req.body.question }})
-    // .createQueryBuilder("userAnswer")
-    // .leftJoinAndSelect("userAnswer.question", "question")
-    // .leftJoinAndSelect("userAnswer.user", "user",)
-    // .leftJoinAndSelect("userAnswer.course", "course",)
-    // .leftJoinAndSelect("userAnswer.answer", "answer",)
-    // // .select(["questionary.id","questionary.question","answers.answer","user.name" , "user.id"])
-    // .where("question.id = :id", { id: req.body.question })
-    // .andWhere("user.id = :id", { id: req.body.user })
-    // .andWhere("course.id = :id", { id: req.body.course })
-    // .andWhere("answer.id = :id", { id: req.body.answer })
-    
-    // userAnswer.question = data.question
-    // userAnswer.answer = data.answer
-    // userAnswer.user = data.user
-    // userAnswer.course = data.course
-    
-
-    // const results = questionRepo
-    return res.json(statiscs)
-})
+      return res.json(statiscs)
+  })
 
 app.get("/allUserAnswer", async function (req: Request, res: Response) {
     const repo = myDataSource.getRepository(UserAnswer)
@@ -332,12 +307,7 @@ app.get("/allUserAnswer", async function (req: Request, res: Response) {
     .leftJoinAndSelect("userAnswer.user", "user",)
     .leftJoinAndSelect("userAnswer.course", "course",)
     .leftJoinAndSelect("userAnswer.answer", "answer",)
-    // .select(["questionary.id","questionary.question","answers.answer","user.name" , "user.id"])
-    
-    // userAnswer.question = data.question
-    // userAnswer.answer = data.answer
-    // userAnswer.user = data.user
-    // userAnswer.course = data.course
+   
     
 
     const results = await repo.getMany()
@@ -351,18 +321,10 @@ app.delete("/users/:id", async function (req: Request, res: Response) {
     return res.send(results)
 })
 
+app.delete("/course", async function (req: Request, res: Response) {
+    const results = await myDataSource.getRepository(Course).delete(req.body)
+    return res.send(results)
+})
+
 // start express server
 app.listen(3000)
-
-
-// export class Statiscs{
-
-//     question: Questionary
-//     percentage: [AnswerStatics]
-
-// }
-
-// export class AnswerStatics{
-//     answer: Answer
-//     percentage: number
-// }
