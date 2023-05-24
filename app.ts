@@ -187,8 +187,6 @@ app.post("/userAnswer", async function (req: Request, res: Response) {
    
     const ress = await repo.query(`select * from sql7619574S.user_answer as ans left join user as user on user.id = ans.userId left join answer as answers on answers.id = ans.answerId where userId = ${req.body.user} and questionId = ${req.body.question} and courseId =${req.body.course};`)
 
-    
-    
     // let answersLength = ress[1]
     if(ress.length > 0){
         return res.status(404).send('You have already answered this question')
