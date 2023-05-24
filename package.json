@@ -5,7 +5,8 @@
   "main": "app.js",
   "scripts": {
     "start": "nodemon app.ts",
-    "deve": "npm run dev"
+    "deve": "npm run dev",
+    "pm2":"pm2 start app.ts"
   },
   "engines": {
     "node": "18.x"
@@ -25,6 +26,7 @@
     "forever": "^4.0.3",
     "helmet": "^6.0.1",
     "mysql": "^2.18.1",
+    "pm2": "^5.3.0",
     "reflect-metadata": "^0.1.13",
     "ts-node": "^10.9.1",
     "typeorm": "^0.3.12"
