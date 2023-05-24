@@ -185,7 +185,7 @@ app.post("/course", async function (req: Request, res: Response) {
 app.post("/userAnswer", async function (req: Request, res: Response) {
     const repo = myDataSource.getRepository(UserAnswer)
    
-    const ress = await repo.query(`select * from sql7619574S.user_answer as ans left join user as user on user.id = ans.userId left join answer as answers on answers.id = ans.answerId where userId = ${req.body.user} and questionId = ${req.body.question} and courseId =${req.body.course};`)
+    const ress = await repo.query(`select * from sql7619574.user_answer as ans left join sql7619574.user as user on user.id = ans.userId left join sql7619574.answer as answers on answers.id = ans.answerId where userId = ${req.body.user} and questionId = ${req.body.question} and courseId =${req.body.course};`)
 
     // let answersLength = ress[1]
     if(ress.length > 0){
