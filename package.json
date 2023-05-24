@@ -6,7 +6,7 @@
   "scripts": {
     "start": "nodemon app.ts",
     "deve": "npm run dev",
-    "pm2":"pm2 start app.ts"
+    "pm2": "pm2 start app.ts"
   },
   "engines": {
     "node": "18.x"
