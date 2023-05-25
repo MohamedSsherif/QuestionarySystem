@@ -31,7 +31,7 @@ const myDataSource = new DataSource({
     database: 'sql7619574',
     port : 3306,
     //connectionLimit : 1000,
-    connectTimeout  : 20000,
+    //connectTimeout  : 20000,
     // acquireTimeout  : 60 * 60 * 1000,
     // timeout         : 60 * 60 * 1000,
 
@@ -82,7 +82,8 @@ app.post('/signIn',async (req,res)=>{
        return res.status(404).send('invalid email')
    }
 
-   const checkpassword = await bcrypt.compare(req.body.password,user.password)
+//    const checkpassword = await bcrypt.compare(req.body.password,user.password)
+   const checkpassword = req.body.password === user.password
    if(!checkpassword){
        return res.status(404).send('invalid password')
    }
@@ -94,8 +95,8 @@ app.post('/signIn',async (req,res)=>{
 })
 
 app.post("/user", async function (req: Request, res: Response) {
-    let hashedPass = await bcrypt.hash(req.body.password, 10,)
-    req.body.password = hashedPass
+    // let hashedPass = await bcrypt.hash(req.body.password, 10,)
+    // req.body.password = hashedPass
     const repo = myDataSource.getRepository(User)
     const user = repo.create( req.body as User)
     const results = await repo.save(user)
