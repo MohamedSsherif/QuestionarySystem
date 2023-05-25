@@ -88,11 +88,6 @@ app.post('/signIn',async (req,res)=>{
    }
 
 
-   //var request = new sql.Request();
-   // request.query('select password from users', function (err, records) {
-   //     if (err) console.log(err)
-   //     res.send(records);
-   // });
 
    delete user.password
    res.json(user)

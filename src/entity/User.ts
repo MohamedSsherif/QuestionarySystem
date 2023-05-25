@@ -3,7 +3,7 @@ import { Course } from "./Course"
 
 export enum UserType {ADMIN = "Admin" , STUDENT = "Student", DOCTOR = "Doctor"}
 
-@Entity("User" ,)
+@Entity("user" ,)
 export class User {
 
     @PrimaryGeneratedColumn()
