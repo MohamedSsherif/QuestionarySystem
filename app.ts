@@ -283,10 +283,10 @@ app.get("/percentage", async function (req: Request, res: Response) {
           return {
               question: item.question,
               answers:{
-                  "موافق": (ok/totalAns)*100,
-                  "غير موافق": (notOk/totalAns)*100,
-                  "الي حد ما": (maybe/totalAns)*100,
-                  "موافق تماما": (Exactly/totalAns)*100,
+                  "موافق": (ok/totalAns)+ ' %',
+                  "غير موافق": (notOk/totalAns)+ ' %',
+                  "الي حد ما": (maybe/totalAns)+ ' %',
+                  "موافق تماما": (Exactly/totalAns)+ ' %',
               } 
           }
       })
