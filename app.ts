@@ -26,12 +26,12 @@ const myDataSource = new DataSource({
 
 
     host: 'sql7.freemysqlhosting.net',
-    username: 'sql7619574',
-    password: "8sIY41QPYP",
-    database: 'sql7619574',
+    username: 'sql7621776',
+    password: "bpgcUAWp6z",
+    database: 'sql7621776',
     port : 3306,
     //connectionLimit : 1000,
-    //connectTimeout  : 20000,
+    connectTimeout  : 20000,
     // acquireTimeout  : 60 * 60 * 1000,
     // timeout         : 60 * 60 * 1000,
 
@@ -175,6 +175,31 @@ app.post("/course", async function (req: Request, res: Response) {
     const results = await repo.save(course)
     return res.send(results)
 })
+
+
+
+// app.post("/userAnswer", async function (req: Request, res: Response) {
+//     const repo = myDataSource.getRepository(UserAnswer)
+   
+    
+//     // let answersLength = ress[1]
+//     // const userAnswer = repo.create(req.body as UserAnswer)
+//     const userAnswer = repo.create(req.body as [UserAnswer])
+    
+//     for (let index = 0; index < userAnswer.length; index++) {
+//         const element = userAnswer[index];
+//         // const ress = await repo.query(`select * from sql7619574.user_answer as ans left join sql7619574.user as user on user.id = ans.userId left join sql7619574.answer as answers on answers.id = ans.answerId where userId = ${element.user} and questionId = ${element.question} and courseId =${element.course};`)
+//         const ress = await repo.query(`select * from university.user_answer as ans left join university.user as user on user.id = ans.userId left join university.answer as answers on answers.id = ans.answerId where userId = ${element.user} and questionId = ${element.question} and courseId =${element.course};`)
+//         if(ress.length > 0){
+//             return res.status(404).send('You have already answered this question : ' + element.question + ' in this course :  ' + element.course + ' with answer :  ' + element.answer)
+//         }
+//         const results = await repo.save(element)
+        
+//     }
+
+//     // const results = await repo.insert(userAnswer)
+//     return res.json('Done')
+// })
 
 
 
